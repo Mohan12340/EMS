@@ -99,28 +99,29 @@ pipeline {
 
         stage('Push Docker Image') {
 
-            steps {
+    steps {
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )
+        ]) {
 
-                    sh '''
-                    echo $DOCKER_PASS | docker login \
-                    -u $DOCKER_USER \
-                    --password-stdin
+            sh '''
+            echo "$DOCKER_PASS" | docker login \
+            -u "$DOCKER_USER" \
+            --password-stdin
 
-                    docker push '${DOCKERHUB_REPO}':'${IMAGE_TAG}'
-                    docker push '${DOCKERHUB_REPO}':latest
-                    '''
-                }
-            }
+            docker push $DOCKERHUB_REPO:$IMAGE_TAG
+            docker push $DOCKERHUB_REPO:latest
+
+            docker logout
+            '''
         }
-
+    }
+}
         stage('Deploy using Docker Compose') {
 
             steps {
@@ -134,15 +135,17 @@ pipeline {
                 ]) {
 
                     sh '''
-                    export MYSQL_DATABASE=employee_db
-                    export MYSQL_USER=$MYSQL_USER
-                    export MYSQL_PASSWORD=$MYSQL_PASSWORD
-                    export MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
+export MYSQL_DATABASE=employee_db
+export MYSQL_USER=$MYSQL_USER
+export MYSQL_PASSWORD=$MYSQL_PASSWORD
+export MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
 
-                    docker-compose down --remove-orphans || true
+docker-compose down --remove-orphans || true
 
-                    docker-compose up -d
-                    '''
+docker-compose pull
+
+docker-compose up -d --force-recreate
+'''
                 }
             }
         }
