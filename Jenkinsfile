@@ -107,11 +107,11 @@ pipeline {
                         export MYSQL_PASSWORD=$MYSQL_PASSWORD
                         export MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD
  
-                        docker-compose down --remove-orphans || true
+                        docker compose down --remove-orphans || true
  
-                        docker-compose pull
+                        docker compose pull
  
-                        docker-compose up -d --force-recreate
+                        docker compose up -d --force-recreate
                     '''
                 }
             }
